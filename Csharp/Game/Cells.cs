@@ -2,6 +2,44 @@
 {
     using System;
 
+    public static class CellFactory
+    {
+        #region Constants and Fields
+
+        public static readonly ICell Blank = new Cell(ReboundDirection.Down);
+
+        public static readonly ICell LeftBorder = new Cell(ReboundDirection.Right);
+
+        public static readonly ICell MiddlePin = new Pin();
+
+        public static readonly ICell RightBorder = new Cell(ReboundDirection.Left);
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        public static ICell MakeBlank()
+        {
+            return Blank;
+        }
+
+        public static ICell MakePin(int atColumn, int maxColum)
+        {
+            var result = MiddlePin;
+            if (atColumn == 0)
+            {
+                result = LeftBorder;
+            }
+            else if (atColumn >= maxColum)
+            {
+                result = RightBorder;
+            }
+            return result;
+        }
+
+        #endregion
+    }
+
     public class Cell : ICell
     {
         #region Constants and Fields
@@ -23,12 +61,18 @@
 
         public bool IsPin
         {
-            get { return reboundDirection != ReboundDirection.Down; }
+            get
+            {
+                return this.reboundDirection != ReboundDirection.Down;
+            }
         }
 
         public float Probability
         {
-            get { return 1; }
+            get
+            {
+                return 1;
+            }
         }
 
         #endregion
@@ -72,7 +116,9 @@
     {
         #region Constructors and Destructors
 
-        internal Pin() { }
+        internal Pin()
+        {
+        }
 
         #endregion
 
@@ -80,7 +126,10 @@
 
         public bool IsPin
         {
-            get { return true; }
+            get
+            {
+                return true;
+            }
         }
 
         public virtual float Probability

@@ -45,7 +45,6 @@
   <ItemGroup>
     <Compile Include="Board.cs" />
     <Compile Include="Cells.cs" />
-    <Compile Include="CellFactory.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConfigReader.cs" />
     <Compile Include="Coord.cs" />
