@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from game import Board, PROB_LBORDER, PROB_PIN, PROB_RBORDER, PinAt, Point, Walker
+from game import Board, PROB_LBORDER, PROB_PIN, PROB_RBORDER, PinAt, Coord, Walker
 import unittest
 
 __all__ = ['TestMakeCell', 'TestBoard', 'TestWalkerPrimitives', 'TestWalkerTrajectories']
@@ -126,20 +126,20 @@ class TestWalkerPrimitives(_CustomTest):
         self.assertEqual(should_be, self.w._next_step(point))
 
     def test_get_next_step_if_blank(self):
-        expected = [(Point(1, 1), 1)]
-        self.assertNextStepFrom(Point(0, 1), should_be=expected)
+        expected = [(Coord(1, 1), 1)]
+        self.assertNextStepFrom(Coord(0, 1), should_be=expected)
 
     def test_get_next_step_if_lborder(self):
-        expected = [(Point(0, 1), 1)]
-        self.assertNextStepFrom(Point(0, 0), should_be=expected)
+        expected = [(Coord(0, 1), 1)]
+        self.assertNextStepFrom(Coord(0, 0), should_be=expected)
 
     def test_get_next_step_if_rborder(self):
-        expected = [(Point(2, 1), 1)]
-        self.assertNextStepFrom(Point(2, 2), should_be=expected)
+        expected = [(Coord(2, 1), 1)]
+        self.assertNextStepFrom(Coord(2, 2), should_be=expected)
 
     def test_get_next_step_if_pin(self):
-        expected = [(Point(1, 0), 0.5), (Point(1, 2), 0.5)]
-        self.assertNextStepFrom(Point(1, 1), should_be=expected)
+        expected = [(Coord(1, 0), 0.5), (Coord(1, 2), 0.5)]
+        self.assertNextStepFrom(Coord(1, 1), should_be=expected)
 
 
 class TestWalkerRoutes(_CustomTest):
@@ -148,7 +148,7 @@ class TestWalkerRoutes(_CustomTest):
         w = Walker(Board(3, 3).remove_pin_at(1, 1))
 
         EXPECTED_PROB = 1
-        probability = w.starting_from(0, 1).can_arribe_at(2, 1)
+        probability = w.can_arribe_from(0, 1, to=Coord(2, 1))
 
         self.assertEquals(EXPECTED_PROB, probability)
 
@@ -156,15 +156,16 @@ class TestWalkerRoutes(_CustomTest):
         w = Walker(Board(3, 3))
 
         EXPECTED_PROB = 0.5
-        probability = w.starting_from(0, 1).can_arribe_at(2, 1)
+        probability = w.can_arribe_from(0, 1, to=Coord(2, 1))
 
         self.assertEquals(EXPECTED_PROB, probability)
 
     def test_two_hop_trajectory(self):
+        EXPECTED_PROB = 0.25
+
         w = Walker(Board(5, 5))
 
-        EXPECTED_PROB = 0.25
-        probability = w.starting_from(0, 3).can_arribe_at(2, 1)
+        probability = w.can_arribe_from(0, 3, to=Coord(2, 1))
 
         self.assertEquals(EXPECTED_PROB, probability)
 
@@ -189,8 +190,7 @@ class TestWalkerRoutes(_CustomTest):
     def test_find_best_route(self):
         w = self._make_sample_board()
 
-        col, prob = w.find_best_route(
-                        from_=(0, 1), to=(4, 3))
+        col, prob = w.find_best_route_to(4, 3)
 
         self.assertEquals(0, col, 'Columna de entrada')
         self.assertEquals(0.25, prob, 'Probabilidad')
