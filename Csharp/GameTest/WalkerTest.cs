@@ -13,39 +13,6 @@
 
         #region Public Methods and Operators
 
-        [TestMethod]
-        public void ForkIfHitsAPin()
-        {
-            var from = new Coord(1, 1);
-            var expected = new Fork(
-                new Route(new Coord(1, 0), 0.5f), new Route(new Coord(1, 2), 0.5f));
-            this.AssertNextStepFromShouldBe(from, expected);
-        }
-
-        [TestMethod]
-        public void MoveForwardIfAtABlank()
-        {
-            var from = new Coord(0, 1);
-            var expected = new Route(new Coord(1, 1), 1);
-            this.AssertNextStepFromShouldBe(from, expected);
-        }
-
-        [TestMethod]
-        public void MoveLeftIfHitsRightBorder()
-        {
-            var from = new Coord(2, 2);
-            var expected = new Route(new Coord(2, 1), 1);
-            this.AssertNextStepFromShouldBe(from, expected);
-        }
-
-        [TestMethod]
-        public void MoveRightIfHitsLeftBorder()
-        {
-            var from = new Coord(0, 0);
-            var expected = new Route(new Coord(0, 1), 1);
-            this.AssertNextStepFromShouldBe(from, expected);
-        }
-
         [TestInitialize]
         public void SetUp()
         {
@@ -58,13 +25,45 @@
             Assert.IsNotNull(this.walker);
         }
 
+        [TestMethod]
+        public void ForkIfHitsAPin()
+        {
+            var from = new Coord(1, 1);
+            var shouldBe = new Fork(new Route(new Coord(1, 0), 0.5f), new Route(new Coord(1, 2), 0.5f));
+            this.AssertNextStep(from, shouldBe);
+        }
+
+        [TestMethod]
+        public void MoveForwardIfAtABlank()
+        {
+            var from = new Coord(0, 1);
+            var shouldBe = new Route(new Coord(1, 1), 1);
+            this.AssertNextStep(from, shouldBe);
+        }
+
+        [TestMethod]
+        public void MoveLeftIfHitsRightBorder()
+        {
+            var from = new Coord(2, 2);
+            var shouldBe = new Route(new Coord(2, 1), 1);
+            this.AssertNextStep(from, shouldBe);
+        }
+
+        [TestMethod]
+        public void MoveRightIfHitsLeftBorder()
+        {
+            var from = new Coord(0, 0);
+            var shouldBe = new Route(new Coord(0, 1), 1);
+            this.AssertNextStep(from, shouldBe);
+        }
+
         #endregion
 
         #region Methods
 
-        private void AssertNextStepFromShouldBe(Coord point, IRoutable route)
+        private void AssertNextStep(Coord from, IRoutable shouldBe)
         {
-            Assert.AreEqual(route, this.walker.NextStep(point));
+            Assert.AreEqual(shouldBe, this.walker.NextStep(from));
         }
 
         #endregion
@@ -91,19 +90,19 @@
         }
 
         [TestMethod]
-        public void SingleHopTrajectory()
-        {
-            Coord from = new Coord(0, 1), to = new Coord(2, 1);
-            this.AssertBestProbToArrive(from, to, 0.5f);
-        }
-
-        [TestMethod]
         public void StraightTrajectory()
         {
             this.board.RemovePinAt(1, 1);
 
             Coord from = new Coord(0, 1), to = new Coord(2, 1);
             this.AssertBestProbToArrive(from, to, 1);
+        }
+
+        [TestMethod]
+        public void SingleHopTrajectory()
+        {
+            Coord from = new Coord(0, 1), to = new Coord(2, 1);
+            this.AssertBestProbToArrive(from, to, 0.5f);
         }
 
         [TestMethod]
@@ -124,15 +123,50 @@
             this.AssertBestProbToArrive(from, to, 0);
         }
 
+        [TestMethod]
+        public void FindAllRoutes()
+        {
+            var expected = new[] { 0.2500f, 0.2500f, 0.0625f, 0.0000f };
+
+            var w = MakeSampleBoard();
+            var found = w.FindAllRoutesTo(4, 3);
+
+            CollectionAssert.AreEqual(expected, found);
+        }
+
+        [TestMethod]
+        public void FindBestRoute()
+        {
+            var expected = new Result(0, 0.25f);
+
+            var w = MakeSampleBoard();
+            var r = w.FindBestRouteTo(4, 3);
+
+            AssertAreEqual(expected, r);
+        }
+
         #endregion
 
         #region Methods
 
+        private static void AssertAreEqual(Result expected, Result actual)
+        {
+            Assert.AreEqual(expected.Column, actual.Column, "Columna de entrada");
+            Assert.AreEqual(expected.Probability, actual.Probability, "Probabilidad");
+        }
+
+        private static Walker MakeSampleBoard()
+        {
+            return new Walker(
+                new Board(5, 9)
+                    .RemovePinAt(1, 3)
+                    .RemovePinAt(2, 2)
+                    .RemovePinAt(3, 5));
+        }
+
         private void AssertBestProbToArrive(Coord from, Coord to, float shouldBe)
         {
-            var probability = this.walker.CanArrive(from, to);
-
-            Assert.AreEqual(shouldBe, probability);
+            Assert.AreEqual(shouldBe, this.walker.CanArrive(from, to));
         }
 
         #endregion
