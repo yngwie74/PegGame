@@ -86,18 +86,16 @@ class Point(tuple):
     c = property(lambda self: self[1])
 
 
+def toPoint(p):
+    return p if isinstance(p, Point) else Point(*p)
+
+
 class Walker(object):
 
     def __init__(self, board):
         self.board = board
 
-    def _add_step(
-        self,
-        point,
-        prob,
-        to,
-        ):
-
+    def _add_step(self, point, prob, to):
         if self.board.in_board(point):
             to.append((point, prob))
 
@@ -135,15 +133,39 @@ class Walker(object):
     def can_arribe_at(self, r, c):
         return self._can_arribe_from(self.position, at=Point(r, c), initial_prob=1)
 
+    @property
+    def _entry_cols(self):
+        return (c for c in xrange(self.board.width) if not self.board._is_pin(0, c))
+
+    def _get_routes(self, to):
+        walk = lambda c: self.starting_from(0, c).can_arribe_at(to.r, to.c)
+        return ((c / 2, walk(c)) for c in self._entry_cols)
+
+    def find_routes_to(self, r, c):
+        return self._get_routes(Point(r, c))
+
+    def _reducer(self, prev, next):
+        return next if next[1] > prev[1] else prev
+
+    def find_best_route(self, **kwds):
+        assert "from_" in kwds
+        assert "to" in kwds
+
+        from_, to = toPoint(kwds["from_"]), toPoint(kwds["to"])
+        routes = self._get_routes(to)
+        return reduce(self._reducer, routes, (1, 0))
+
 
 def main():
-    board = Board(5, 7).remove_pin_at(1, 1)
+    board = Board(5, 9) \
+        .remove_pin_at(1, 3) \
+        .remove_pin_at(2, 2) \
+        .remove_pin_at(3, 5)
     print str(board)
+
     w = Walker(board)
-    walk = lambda c: w.starting_from(0, c).can_arribe_at(4, 3)
-    for c in xrange(board.width):
-        if not board._is_pin(0, c):
-            print 'Entrando por %d, la probabilidad es %.2f%%' % (c / 2, walk(c) * 100)
+    for col, prob in w.find_routes_to(4, 3):
+        print 'Entrando por %d, la probabilidad es %5.2f%%' % (col, prob * 100)
 
 
 if __name__ == '__main__':

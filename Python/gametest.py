@@ -9,6 +9,15 @@ __all__ = ['TestMakeCell', 'TestBoard', 'TestWalkerPrimitives', 'TestWalkerTraje
 
 class _CustomTest(unittest.TestCase):
 
+    def assertEquals(self, expected, actual, message=None):
+        try:
+            unittest.TestCase.assertEquals(self, expected, actual, message)
+        except AssertionError, e:
+            if message:
+                message = '%s: Expected <%r> but was <%r>' % (e, expected, actual)
+                self.fail(message)
+            raise
+
     def assertTrue(self, cond, msg=None):
         msg = msg or 'Assertion failed!'
         unittest.TestCase.assertTrue(self, cond, msg)
@@ -158,6 +167,33 @@ class TestWalkerRoutes(_CustomTest):
         probability = w.starting_from(0, 3).can_arribe_at(2, 1)
 
         self.assertEquals(EXPECTED_PROB, probability)
+
+    def _make_sample_board(self):
+        return Walker(
+                Board(5, 9)
+                    .remove_pin_at(1, 3)
+                    .remove_pin_at(2, 2)
+                    .remove_pin_at(3, 5))
+
+    def test_all_routes(self):
+        expected = [(0, 0.2500),
+                    (1, 0.2500),
+                    (2, 0.0625),
+                    (3, 0.0000)]
+
+        w = self._make_sample_board()
+        routes = list(w.find_routes_to(4, 3))
+        
+        self.assertEquals(expected, routes)
+
+    def test_find_best_route(self):
+        w = self._make_sample_board()
+
+        col, prob = w.find_best_route(
+                        from_=(0, 1), to=(4, 3))
+
+        self.assertEquals(0, col, 'Columna de entrada')
+        self.assertEquals(0.25, prob, 'Probabilidad')
 
 
 if __name__ == '__main__':
